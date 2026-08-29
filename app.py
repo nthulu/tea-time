@@ -8,7 +8,6 @@ st.set_page_config(
     page_icon="🍵",  # 浏览器标签页的图标
     layout="wide"    # 关键：宽屏布局，完美适配手机端
 )
-st.title("泡茶倒计时 🍵")
 
 # ==========================================
 # 🌟 新增：使用 CSS 强制按钮在移动端并排显示
@@ -69,6 +68,7 @@ if 'is_running' not in st.session_state:
     st.session_state.is_running = False # 当前是否正在倒计时
 if 'app_version' not in st.session_state:
     st.session_state.app_version = "v1.0.1"  # 版本号
+st.title(f"泡茶倒计时 🍵{st.session_state.app_version}")
 
 # 创建按钮逻辑
 col1, col2 = st.columns(2) # 把按钮分成两列
