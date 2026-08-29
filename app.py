@@ -7,7 +7,7 @@ import time
 # ==========================================
 
 # region 全局配置
-APP_VERSION = "v1.0.9"  # 应用版本号
+APP_VERSION = "v1.0.10"  # 应用版本号
 
 # 页面基础配置（必须是第一个 st 命令）
 st.set_page_config(
@@ -141,8 +141,6 @@ selected_tea = st.selectbox(
     label="请选择你要泡的茶叶：", options=list(tea_options.keys())
 )
 
-
-
 # 展示用户的选择
 st.success(f"你选择了：【{selected_tea}】")
 st.caption(f"💡 提示：这种茶建议冲泡 {tea_options[selected_tea]} 秒")
@@ -175,46 +173,48 @@ with col2:
         st.session_state.current_step = 1
         st.rerun()  # 点击后停止倒计时，重置记忆背包
 
-# 倒计时逻辑
+# ==========================================
+# 🌟 倒计时展示与结束提示（彻底重构）
+# ==========================================
 
 # 如果正在倒计时，执行以下逻辑
 if st.session_state.is_running and st.session_state.tea_time > 0:
-    # 创建占位符
-    countdown_placeholder = st.empty()
+    @st.fragment(run_every=1)  # 核心魔法：每秒自动刷新这个片段
 
-    # 显示大数字倒计时
-    minutes, seconds = divmod(st.session_state.tea_time, 60)
-    countdown_placeholder.metric(
-        label=f"⏳ {selected_tea} 第{st.session_state.current_step}泡：剩余时间",
-        value=f"{minutes:02d}:{seconds:02d} ",
-    )
-    # st.info(f"⏳ 倒计时中：剩余 {st.session_state.tea_time} 秒")
+    def countdown_timer():
+        current_time = st.session_state.tea_time
+        minutes, seconds = divmod(current_time, 60)
 
-    # 🌟 新增：计算并显示进度条
-    # 进度 = 1 - (剩余时间 / 总时间)，这样进度条是从左往右填满的
-    progress = 1 - (st.session_state.tea_time / st.session_state.total_time)
-    st.progress(progress, text="🍵 正在萃取茶香...")
-    st.session_state.just_finished = False  # 在倒计时期间，确保 just_finished 是 False
+        # 创建占位符
+        countdown_placeholder = st.empty()
+        # 显示大数字倒计时
+        countdown_placeholder.metric(
+            label=f"⏳ {selected_tea} 第{st.session_state.current_step}泡：剩余时间",
+            value=f"{minutes:02d}:{seconds:02d} ")
 
-    # 使用 Streamlit 的计时器功能，每秒减少 1 秒
-    time.sleep(1)  # 等待 1 秒
-    st.session_state.tea_time -= 1  # 减少 1 秒
-    st.rerun()  # 刷新页面，更新显示的时间
+        # 🌟 新增：计算并显示进度条
+        progress = 1 - (st.session_state.tea_time / st.session_state.total_time)
+        st.progress(progress, text="🍵 正在萃取茶香...")
 
+        st.session_state.tea_time -= 1  # 减少 1 秒
+        if st.session_state.tea_time <=0:
+            st.session_state.is_running = False  # 倒计时结束，停止运行
+            st.session_state.current_step += 1  # 泡数加1
+            st.rerun()  # 刷新页面，更新显示的时间
+
+    countdown_timer()  # 递归调用，继续倒计时
 # 倒计时结束后，泡数加1
 elif st.session_state.tea_time <= 0 and st.session_state.is_running:
-    if not st.session_state.just_finished:
-        st.balloons()  # 放个气球动画庆祝一下！
-        st.success(
-            f"✅ {selected_tea} 第{st.session_state.current_step}泡完成！请享用你的茶！"
-        )
 
-        play_audio_queue("https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3")
+    st.balloons()  # 放个气球动画庆祝一下！
+    st.success(
+        f"✅ {selected_tea} 第{st.session_state.current_step}泡完成！请享用你的茶！"
+    )
 
-        # 重置状态 防止无限循环
-        st.session_state.just_finished = True
-        st.session_state.is_running = False  # 重置状态
-        st.session_state.current_step += 1  # 泡数加1
+    play_audio_queue("https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3")
+
+    # 重置状态 防止无限循环
+    st.session_state.is_running = False  # 重置状态
 
     st.info(
         f"💡 提示：你已经泡了 {st.session_state.current_step - 1} 次，下一泡建议冲泡 {tea_options[selected_tea][st.session_state.current_step - 1] if st.session_state.current_step <= len(tea_options[selected_tea]) else 'N/A'} 秒。"
