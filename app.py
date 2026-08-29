@@ -67,6 +67,8 @@ if 'tea_time' not in st.session_state:
     st.session_state.tea_time = 0
 if 'is_running' not in st.session_state:
     st.session_state.is_running = False # 当前是否正在倒计时
+if 'app_version' not in st.session_state:
+    st.session_state.app_version = "v1.0.0"  # 版本号
 
 # 创建按钮逻辑
 col1, col2 = st.columns(2) # 把按钮分成两列
@@ -123,3 +125,6 @@ elif st.session_state.tea_time <= 0 and st.session_state.is_running:
     # 重置状态 防止无限循环
     st.session_state.is_running = False  # 重置状态
     st.session_state.current_step += 1  # 泡数加1
+
+    st.info(f"💡 提示：你已经泡了 {st.session_state.current_step - 1} 次，下一泡建议冲泡 {tea_options[selected_tea][st.session_state.current_step - 1] if st.session_state.current_step <= len(tea_options[selected_tea]) else 'N/A'} 秒。" )
+    st.caption(f"🚀 当前应用版本：{st.session_state.app_version}")
