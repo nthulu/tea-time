@@ -13,7 +13,8 @@ st.set_page_config(
     page_icon="🍵",  # 浏览器标签页的图标
     layout="wide",  # 关键：宽屏布局，完美适配手机端
 )
-app_version = "v1.0.4"  # 版本号
+app_version = "v1.0.5"  # 版本号
+st.title(f"泡茶倒计时 🍵{app_version}")
 
 # 自定义CSS代码
 # ==========================================
@@ -122,7 +123,6 @@ if "is_running" not in st.session_state:
     st.session_state.is_running = False  # 当前是否正在倒计时
 if "app_version" not in st.session_state:
     st.session_state.app_version = app_version  # 版本号
-st.title(f"泡茶倒计时 🍵{st.session_state.app_version}")
 
 # 展示用户的选择
 st.success(f"你选择了：【{selected_tea}】")
