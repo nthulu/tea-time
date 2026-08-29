@@ -1,0 +1,125 @@
+# 导入框架
+import streamlit as st
+import time
+
+# 页面基础配置（必须是第一个 st 命令）
+st.set_page_config(
+    page_title="泡茶倒计时",
+    page_icon="🍵",  # 浏览器标签页的图标
+    layout="wide"    # 关键：宽屏布局，完美适配手机端
+)
+st.title("泡茶倒计时 🍵")
+
+# ==========================================
+# 🌟 新增：使用 CSS 强制按钮在移动端并排显示
+# ==========================================
+st.markdown("""
+<style>
+/* 1. 强制列容器不折行，保持水平排列 */
+div[data-testid="stHorizontalBlock"] {
+    flex-wrap: nowrap !important;
+}
+
+/* 2. 强制列及其内部按钮按内容自适应宽度，消除 100% 撑满行为 */
+div[data-testid="stColumn"] {
+    min-width: 0 !important;
+    flex: 1 1 0% !important; /* 让两个列平分剩余空间 */
+}
+
+/* 3. 优化按钮在窄屏下的显示，防止文字溢出 */
+.stButton > button {
+    white-space: nowrap !important;
+    font-size: 0.85rem !important; /* 稍微缩小字体 */
+    padding: 0.4rem 0.8rem !important; /* 缩小按钮内边距 */
+    width: 100% !important; /* 让按钮撑满它所在的窄列 */
+}
+</style>
+""", unsafe_allow_html=True)
+
+# 准备茶叶数据
+# 我们用字典来存储茶叶和对应的冲泡时间（秒）
+# 支持多泡次
+tea_options = {
+    "绿茶": [40,50,60],  # 绿茶可以泡三次，分别是 40 秒、50 秒、60 秒    
+    "红茶": [15,20,25,30,35],    
+    "乌龙茶": [20,25,30,40,50,60],  
+    "普洱茶": [120,150,180]   
+}
+
+# 创建下拉框
+# label: 下拉框前面的提示文字
+# options: 下拉框里的选项（这里用字典的 keys）
+selected_tea = st.selectbox(
+    label="请选择你要泡的茶叶：",
+    options=list(tea_options.keys())
+)
+
+# 展示用户的选择
+st.success(f"你选择了：【{selected_tea}】")
+st.caption(f"💡 提示：这种茶建议冲泡 {tea_options[selected_tea]} 秒")
+
+# 初始化记忆背包（session_state）
+if 'time_list' not in st.session_state:
+    st.session_state.time_list = []  # 用来存储每次泡茶的时间记录
+if 'current_step' not in st.session_state:
+    st.session_state.current_step = 1  # 用来记录当前是第几泡，从1开始
+if 'tea_time' not in st.session_state:
+    st.session_state.tea_time = 0
+if 'is_running' not in st.session_state:
+    st.session_state.is_running = False # 当前是否正在倒计时
+
+# 创建按钮逻辑
+col1, col2 = st.columns(2) # 把按钮分成两列
+
+with col1:
+    if st.button("☕ 开始泡茶",use_container_width=True):
+        st.session_state.time_list = tea_options[selected_tea]  # 重置时间列表为当前茶叶的冲泡时间
+        if st.session_state.current_step > len(tea_options[selected_tea]):
+            st.warning(f"⚠️ {selected_tea} 最多只能泡 {len(tea_options[selected_tea])} 次哦，再泡就没味道啦。")
+        else:
+            # 取出当前泡数的时间
+            st.session_state.tea_time = st.session_state.time_list[st.session_state.current_step - 1] 
+            st.session_state.total_time = st.session_state.tea_time # 记录总时间
+            st.session_state.is_running = True
+            st.rerun()  # 点击后立刻刷新页面，开始倒计时
+
+with col2:
+    if st.button("⏹ 停止/重置",use_container_width=True):
+        st.session_state.is_running = False
+        st.session_state.tea_time = 0
+        st.session_state.current_step = 1
+        st.rerun()  # 点击后停止倒计时，重置记忆背包
+
+# ==========================================
+# 🌟 倒计时展示
+# ==========================================
+
+# 如果正在倒计时，执行以下逻辑
+if st.session_state.is_running and st.session_state.tea_time > 0:
+    # 创建占位符
+    countdown_placeholder = st.empty()
+
+    # 显示大数字倒计时
+    minutes, seconds = divmod(st.session_state.tea_time, 60)
+    countdown_placeholder.metric(label=f"⏳ {selected_tea} 第{st.session_state.current_step}泡：剩余时间", value=f"{minutes:02d}:{seconds:02d} ")
+    # st.info(f"⏳ 倒计时中：剩余 {st.session_state.tea_time} 秒")
+
+    # 🌟 新增：计算并显示进度条
+    # 进度 = 1 - (剩余时间 / 总时间)，这样进度条是从左往右填满的
+    progress = 1 - (st.session_state.tea_time / st.session_state.total_time)
+    st.progress(progress, text="🍵 正在萃取茶香...")
+
+    # 使用 Streamlit 的计时器功能，每秒减少 1 秒
+    time.sleep(1)  # 等待 1 秒
+    st.session_state.tea_time -= 1  # 减少 1 秒
+    st.rerun()  # 刷新页面，更新显示的时间
+
+# 倒计时结束后，泡数加1
+elif st.session_state.tea_time <= 0 and st.session_state.is_running:
+    st.balloons()  # 放个气球动画庆祝一下！
+    st.success(f"✅ {selected_tea} 第{st.session_state.current_step}泡完成！请享用你的茶！")
+    st.audio("https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3", format="audio/mp3", autoplay=True)
+
+    # 重置状态 防止无限循环
+    st.session_state.is_running = False  # 重置状态
+    st.session_state.current_step += 1  # 泡数加1
