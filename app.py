@@ -7,7 +7,7 @@ import time
 # ==========================================
 
 # region 全局配置
-APP_VERSION = "v1.0.7"  # 应用版本号
+APP_VERSION = "v1.0.9"  # 应用版本号
 
 # 页面基础配置（必须是第一个 st 命令）
 st.set_page_config(
@@ -115,7 +115,8 @@ def init_session_state():
         "current_step": 1,  # 用来记录当前是第几泡，从1开始
         "tea_time": 0,  # 当前泡茶的剩余时间
         "total_time": 0,  # 当前泡茶的总时间
-        "is_running": False  # 当前是否正在倒计时
+        "is_running": False,  # 当前是否正在倒计时
+        "just_finished": False  # 标记是否刚刚完成泡茶
     }
 
     # 遍历 赋值默认值
@@ -193,6 +194,7 @@ if st.session_state.is_running and st.session_state.tea_time > 0:
     # 进度 = 1 - (剩余时间 / 总时间)，这样进度条是从左往右填满的
     progress = 1 - (st.session_state.tea_time / st.session_state.total_time)
     st.progress(progress, text="🍵 正在萃取茶香...")
+    st.session_state.just_finished = False  # 在倒计时期间，确保 just_finished 是 False
 
     # 使用 Streamlit 的计时器功能，每秒减少 1 秒
     time.sleep(1)  # 等待 1 秒
@@ -201,16 +203,18 @@ if st.session_state.is_running and st.session_state.tea_time > 0:
 
 # 倒计时结束后，泡数加1
 elif st.session_state.tea_time <= 0 and st.session_state.is_running:
-    st.balloons()  # 放个气球动画庆祝一下！
-    st.success(
-        f"✅ {selected_tea} 第{st.session_state.current_step}泡完成！请享用你的茶！"
-    )
+    if not st.session_state.just_finished:
+        st.balloons()  # 放个气球动画庆祝一下！
+        st.success(
+            f"✅ {selected_tea} 第{st.session_state.current_step}泡完成！请享用你的茶！"
+        )
 
-    play_audio_queue("https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3")
+        play_audio_queue("https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3")
 
-    # 重置状态 防止无限循环
-    st.session_state.is_running = False  # 重置状态
-    st.session_state.current_step += 1  # 泡数加1
+        # 重置状态 防止无限循环
+        st.session_state.just_finished = True
+        st.session_state.is_running = False  # 重置状态
+        st.session_state.current_step += 1  # 泡数加1
 
     st.info(
         f"💡 提示：你已经泡了 {st.session_state.current_step - 1} 次，下一泡建议冲泡 {tea_options[selected_tea][st.session_state.current_step - 1] if st.session_state.current_step <= len(tea_options[selected_tea]) else 'N/A'} 秒。"
