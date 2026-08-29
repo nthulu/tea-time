@@ -13,8 +13,6 @@ st.set_page_config(
     page_icon="🍵",  # 浏览器标签页的图标
     layout="wide",  # 关键：宽屏布局，完美适配手机端
 )
-app_version = "v1.0.5"  # 版本号
-st.title(f"泡茶倒计时 🍵{app_version}")
 
 # 自定义CSS代码
 # ==========================================
@@ -51,6 +49,7 @@ div[data-testid="stColumn"] {
 # 🌟 数据和工具函数（使用 def 封装）
 # ==========================================
 
+
 # 茶叶数据 字典来存储茶叶和对应的冲泡时间（秒）支持多泡次
 def get_tea_options():
     """获取茶叶配置字典"""
@@ -60,6 +59,7 @@ def get_tea_options():
         "乌龙茶": [20, 25, 30, 40, 50, 60],
         "普洱茶": [120, 150, 180],
     }
+
 
 # 🌟 HTML5 音频队列播放函数
 def play_audio_queue(audio_url):
@@ -101,10 +101,36 @@ def play_audio_queue(audio_url):
     """
     st.components.v1.html(audio_script, height=0)
 
+# 参数初始化
+def init_session_state():
+    """
+    初始化 session_state 参数
+    只在首次加载 防止后续rerun覆盖
+    """
+    defaults = {
+        "app_version": "v1.0.6",  # 应用版本号
+        "time_list": [],  # 用来存储每次泡茶的时间记录
+        "current_step": 1,  # 用来记录当前是第几泡，从1开始
+        "tea_time": 0,  # 当前泡茶的剩余时间
+        "total_time": 0,  # 当前泡茶的总时间
+        "is_running": False  # 当前是否正在倒计时
+    }
+
+    # 遍历 赋值默认值
+    for key, value in defaults.items():
+        if key not in st.session_state:
+            st.session_state[key] = value
+            
 # ==========================================
 # 🌟 核心 UI 与业务逻辑（使用 region 折叠）
 # ==========================================
 # region 主程序逻辑
+
+# 初始化记忆背包（session_state）
+init_session_state()
+
+st.title(f"🍵 泡茶倒计时{st.session_state.app_version}")
+
 # 茶叶选择
 tea_options = get_tea_options()
 # 创建下拉框
@@ -112,17 +138,7 @@ selected_tea = st.selectbox(
     label="请选择你要泡的茶叶：", options=list(tea_options.keys())
 )
 
-# 初始化记忆背包（session_state）
-if "time_list" not in st.session_state:
-    st.session_state.time_list = []  # 用来存储每次泡茶的时间记录
-if "current_step" not in st.session_state:
-    st.session_state.current_step = 1  # 用来记录当前是第几泡，从1开始
-if "tea_time" not in st.session_state:
-    st.session_state.tea_time = 0
-if "is_running" not in st.session_state:
-    st.session_state.is_running = False  # 当前是否正在倒计时
-if "app_version" not in st.session_state:
-    st.session_state.app_version = app_version  # 版本号
+
 
 # 展示用户的选择
 st.success(f"你选择了：【{selected_tea}】")
