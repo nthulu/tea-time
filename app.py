@@ -45,6 +45,20 @@ tea_options = {
     "普洱茶": [120,150,180]   
 }
 
+# 初始化记忆背包（session_state）
+if 'time_list' not in st.session_state:
+    st.session_state.time_list = []  # 用来存储每次泡茶的时间记录
+if 'current_step' not in st.session_state:
+    st.session_state.current_step = 1  # 用来记录当前是第几泡，从1开始
+if 'tea_time' not in st.session_state:
+    st.session_state.tea_time = 0
+if 'is_running' not in st.session_state:
+    st.session_state.is_running = False # 当前是否正在倒计时
+if 'app_version' not in st.session_state:
+    st.session_state.app_version = "v1.0.3"  # 版本号
+st.title(f"泡茶倒计时 🍵{st.session_state.app_version}")
+
+
 # 创建下拉框
 # label: 下拉框前面的提示文字
 # options: 下拉框里的选项（这里用字典的 keys）
@@ -56,19 +70,6 @@ selected_tea = st.selectbox(
 # 展示用户的选择
 st.success(f"你选择了：【{selected_tea}】")
 st.caption(f"💡 提示：这种茶建议冲泡 {tea_options[selected_tea]} 秒")
-
-# 初始化记忆背包（session_state）
-if 'time_list' not in st.session_state:
-    st.session_state.time_list = []  # 用来存储每次泡茶的时间记录
-if 'current_step' not in st.session_state:
-    st.session_state.current_step = 1  # 用来记录当前是第几泡，从1开始
-if 'tea_time' not in st.session_state:
-    st.session_state.tea_time = 0
-if 'is_running' not in st.session_state:
-    st.session_state.is_running = False # 当前是否正在倒计时
-if 'app_version' not in st.session_state:
-    st.session_state.app_version = "v1.0.1"  # 版本号
-st.title(f"泡茶倒计时 🍵{st.session_state.app_version}")
 
 # 创建按钮逻辑
 col1, col2 = st.columns(2) # 把按钮分成两列
