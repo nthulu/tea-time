@@ -7,6 +7,8 @@ import time
 # ==========================================
 
 # region 全局配置
+APP_VERSION = "v1.0.7"  # 应用版本号
+
 # 页面基础配置（必须是第一个 st 命令）
 st.set_page_config(
     page_title="泡茶倒计时",
@@ -54,7 +56,7 @@ div[data-testid="stColumn"] {
 def get_tea_options():
     """获取茶叶配置字典"""
     return {
-        "绿茶": [40, 50, 60],  # 绿茶可以泡三次，分别是 40 秒、50 秒、60 秒
+        "绿茶": [4, 5, 6],  # 绿茶可以泡三次，分别是 40 秒、50 秒、60 秒
         "红茶": [15, 20, 25, 30, 35],
         "乌龙茶": [20, 25, 30, 40, 50, 60],
         "普洱茶": [120, 150, 180],
@@ -108,7 +110,7 @@ def init_session_state():
     只在首次加载 防止后续rerun覆盖
     """
     defaults = {
-        "app_version": "v1.0.6",  # 应用版本号
+        "app_version": APP_VERSION,  # 应用版本号
         "time_list": [],  # 用来存储每次泡茶的时间记录
         "current_step": 1,  # 用来记录当前是第几泡，从1开始
         "tea_time": 0,  # 当前泡茶的剩余时间
@@ -129,7 +131,7 @@ def init_session_state():
 # 初始化记忆背包（session_state）
 init_session_state()
 
-st.title(f"🍵 泡茶倒计时{st.session_state.app_version}")
+st.title(f"🍵 泡茶倒计时{APP_VERSION}")
 
 # 茶叶选择
 tea_options = get_tea_options()
@@ -203,11 +205,8 @@ elif st.session_state.tea_time <= 0 and st.session_state.is_running:
     st.success(
         f"✅ {selected_tea} 第{st.session_state.current_step}泡完成！请享用你的茶！"
     )
-    st.audio(
-        "https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3",
-        format="audio/mp3",
-        autoplay=True,
-    )
+
+    play_audio_queue("https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3")
 
     # 重置状态 防止无限循环
     st.session_state.is_running = False  # 重置状态
