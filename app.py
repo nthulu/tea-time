@@ -7,7 +7,7 @@ import time
 # ==========================================
 
 # region 全局配置
-APP_VERSION = "v1.1.13"  # 应用版本号
+APP_VERSION = "v1.1.14"  # 应用版本号
 
 # 页面基础配置（必须是第一个 st 命令）
 st.set_page_config(
