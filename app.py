@@ -7,7 +7,7 @@ import time
 # ==========================================
 
 # region 全局配置
-APP_VERSION = "v1.0.10"  # 应用版本号
+APP_VERSION = "v1.0.11"  # 应用版本号
 
 # 页面基础配置（必须是第一个 st 命令）
 st.set_page_config(
@@ -41,6 +41,7 @@ div[data-testid="stColumn"] {
     padding: 0.4rem 0.8rem !important; /* 缩小按钮内边距 */
     width: 100% !important; /* 让按钮撑满它所在的窄列 */
 }
+
 </style>
 """,
     unsafe_allow_html=True,
@@ -50,12 +51,13 @@ div[data-testid="stColumn"] {
 # ==========================================
 # 🌟 数据和工具函数（使用 def 封装）
 # ==========================================
-
+# region 数据和工具函数
 
 # 茶叶数据 字典来存储茶叶和对应的冲泡时间（秒）支持多泡次
 def get_tea_options():
     """获取茶叶配置字典"""
     return {
+        "台湾乌龙-四季春": [30, 30, 35, 35, 40, 45, 50],  # 台湾乌龙-四季春可以泡六次，分别是 30 秒、30 秒、35 秒、35 秒、40 秒、45 秒
         "绿茶": [4, 5, 6],  # 绿茶可以泡三次，分别是 40 秒、50 秒、60 秒
         "红茶": [15, 20, 25, 30, 35],
         "乌龙茶": [20, 25, 30, 40, 50, 60],
@@ -123,6 +125,7 @@ def init_session_state():
     for key, value in defaults.items():
         if key not in st.session_state:
             st.session_state[key] = value
+# endregion
             
 # ==========================================
 # 🌟 核心 UI 与业务逻辑（使用 region 折叠）
@@ -135,14 +138,19 @@ init_session_state()
 st.title(f"🍵 泡茶倒计时{APP_VERSION}")
 
 # 茶叶选择
-tea_options = get_tea_options()
-# 创建下拉框
-selected_tea = st.selectbox(
-    label="请选择你要泡的茶叶：", options=list(tea_options.keys())
-)
+col1, col2 = st.columns(2)  # 把按钮分成两列
+
+with col1:
+    st.write("请选择你要泡的茶叶：")
+with col2:
+    tea_options = get_tea_options()
+    # 创建下拉框
+    selected_tea = st.selectbox(
+        label="请选择你要泡的茶叶：", options=list(tea_options.keys()),label_visibility="collapsed"
+    )
 
 # 展示用户的选择
-st.success(f"你选择了：【{selected_tea}】")
+st.success(f"你选择了：【{selected_tea}】泡茶方式：盖碗 水量：140ml 茶叶：7g")
 st.caption(f"💡 提示：这种茶建议冲泡 {tea_options[selected_tea]} 秒")
 
 # 创建按钮逻辑
@@ -174,10 +182,10 @@ with col2:
         st.rerun()  # 点击后停止倒计时，重置记忆背包
 
 # ==========================================
-# 🌟 倒计时展示与结束提示（彻底重构）
+# 🌟 倒计时展示与结束提示（最终修复）
 # ==========================================
 
-# 如果正在倒计时，执行以下逻辑
+# 正在倒计时中（使用 st.fragment 实现每秒独立刷新）
 if st.session_state.is_running and st.session_state.tea_time > 0:
     @st.fragment(run_every=1)  # 核心魔法：每秒自动刷新这个片段
 
@@ -198,12 +206,11 @@ if st.session_state.is_running and st.session_state.tea_time > 0:
 
         st.session_state.tea_time -= 1  # 减少 1 秒
         if st.session_state.tea_time <=0:
-            st.session_state.is_running = False  # 倒计时结束，停止运行
             st.session_state.current_step += 1  # 泡数加1
             st.rerun()  # 刷新页面，更新显示的时间
 
     countdown_timer()  # 递归调用，继续倒计时
-# 倒计时结束后，泡数加1
+# 倒计时刚好结束（由主程序刷新触发）
 elif st.session_state.tea_time <= 0 and st.session_state.is_running:
 
     st.balloons()  # 放个气球动画庆祝一下！
