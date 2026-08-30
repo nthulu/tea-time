@@ -7,7 +7,7 @@ import time
 # ==========================================
 
 # region 全局配置
-APP_VERSION = "v1.0.11"  # 应用版本号
+APP_VERSION = "v1.1.12"  # 应用版本号
 
 # 页面基础配置（必须是第一个 st 命令）
 st.set_page_config(
@@ -64,6 +64,21 @@ def get_tea_options():
         "普洱茶": [120, 150, 180],
     }
 
+# 🌟 新增：获取自定义泡茶时间函数
+def get_custom_time(current_step):
+    """
+    提供一个滑块让用户自定义当前泡次的时间。
+    参数 current_step: 当前是第几泡，用于显示在滑块标签上。
+    """
+    # 默认时间设为 60 秒，范围 10~300 秒
+    custom_time = st.slider(
+        label=f"自定义第 {current_step} 泡的时间（秒）",
+        min_value=10,
+        max_value=300,
+        value=60,
+        step=5,
+    )
+    return custom_time
 
 # 🌟 HTML5 音频队列播放函数
 def play_audio_queue(audio_url):
