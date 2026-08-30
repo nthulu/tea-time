@@ -7,7 +7,7 @@ import time
 # ==========================================
 
 # region 全局配置
-APP_VERSION = "v1.1.12"  # 应用版本号
+APP_VERSION = "v1.1.13"  # 应用版本号
 
 # 页面基础配置（必须是第一个 st 命令）
 st.set_page_config(
@@ -164,6 +164,12 @@ with col2:
         label="请选择你要泡的茶叶：", options=list(tea_options.keys()),label_visibility="collapsed"
     )
 
+# 🌟 新增：模式切换开关
+use_custom_time = st.toggle("🎛️ 开启自定义时间模式", value=False)
+if use_custom_time:
+    # 如果开启自定义时间模式，显示滑块让用户自定义当前泡次的时间
+    custom_time = get_custom_time(st.session_state.current_step)
+
 # 展示用户的选择
 st.success(f"你选择了：【{selected_tea}】泡茶方式：盖碗 水量：140ml 茶叶：7g")
 st.caption(f"💡 提示：这种茶建议冲泡 {tea_options[selected_tea]} 秒")
@@ -173,18 +179,24 @@ col1, col2 = st.columns(2)  # 把按钮分成两列
 
 with col1:
     if st.button("☕ 开始泡茶", use_container_width=True):
-        st.session_state.time_list = tea_options[
-            selected_tea
-        ]  # 重置时间列表为当前茶叶的冲泡时间
+        # 🌟 核心修改：根据模式决定使用哪种时间
+        if use_custom_time:
+            # 自定义模式：使用滑块的时间，并包装成单元素列表（兼容多泡次逻辑）
+            st.session_state.time_list = [custom_time]
+        else:
+            # 默认模式：使用预设的茶叶时间列表
+            st.session_state.time_list = tea_options[selected_tea]
+
         if st.session_state.current_step > len(tea_options[selected_tea]):
             st.warning(
                 f"⚠️ {selected_tea} 最多只能泡 {len(tea_options[selected_tea])} 次哦，再泡就没味道啦。"
             )
         else:
             # 取出当前泡数的时间
-            st.session_state.tea_time = st.session_state.time_list[
-                st.session_state.current_step - 1
-            ]
+            if use_custom_time:
+                st.session_state.tea_time = st.session_state.time_list[0]  # 只有一个自定义时间
+            else:
+                st.session_state.tea_time = st.session_state.time_list[st.session_state.current_step - 1]
             st.session_state.total_time = st.session_state.tea_time  # 记录总时间
             st.session_state.is_running = True
             st.rerun()  # 点击后立刻刷新页面，开始倒计时
@@ -195,6 +207,8 @@ with col2:
         st.session_state.tea_time = 0
         st.session_state.current_step = 1
         st.rerun()  # 点击后停止倒计时，重置记忆背包
+
+# endregion
 
 # ==========================================
 # 🌟 倒计时展示与结束提示（最终修复）
