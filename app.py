@@ -7,7 +7,7 @@ import time
 # ==========================================
 
 # region 全局配置
-APP_VERSION = "v1.1.14"  # 应用版本号
+APP_VERSION = "v1.1.16 beta"  # 应用版本号
 
 # 页面基础配置（必须是第一个 st 命令）
 st.set_page_config(
@@ -150,7 +150,7 @@ def init_session_state():
 # 初始化记忆背包（session_state）
 init_session_state()
 
-st.title(f"🍵 泡茶倒计时{APP_VERSION}")
+st.title(f"🍵 泡茶倒计时", anchor="tea-timer")
 
 # 茶叶选择
 col1, col2 = st.columns(2)  # 把按钮分成两列
@@ -171,8 +171,8 @@ if use_custom_time:
     custom_time = get_custom_time(st.session_state.current_step)
 
 # 展示用户的选择
-st.success(f"你选择了：【{selected_tea}】泡茶方式：盖碗 水量：140ml 茶叶：7g")
-st.caption(f"💡 提示：这种茶建议冲泡 {tea_options[selected_tea]} 秒")
+st.success(f"你选择了：【{selected_tea}】  \n泡茶方式：盖碗 水量：140ml 茶叶：7g")
+st.caption(f"💡 这种茶建议冲泡 {tea_options[selected_tea]} 秒")
 
 # 创建按钮逻辑
 col1, col2 = st.columns(2)  # 把按钮分成两列
