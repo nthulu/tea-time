@@ -1,6 +1,8 @@
 # 导入框架
 import streamlit as st
-from data import APP_VERSION, get_tea_options, init_session_state
+import importlib
+import data
+importlib.reload(data)  # 解决模块缓存问题
 from utils import play_audio_queue, hide_streamlit_style, get_custom_time
 
 
@@ -24,10 +26,10 @@ st.title(f"🍵 泡茶倒计时", anchor="tea-timer")
 # region 主程序逻辑
 
 # 初始化记忆背包（session_state）
-init_session_state()
+data.init_session_state()
 
 # 茶叶选择
-tea_options = get_tea_options()  # 获取茶叶配置字典
+tea_options = data.get_tea_options()  # 获取茶叶配置字典
 
 col1, col2 = st.columns(2)  # 分成两列
 with col1:
@@ -42,7 +44,7 @@ with col2:
 use_custom_time = st.toggle("🎛️ 开启自定义时间模式", value=False)
 if use_custom_time:
     # 如果开启自定义时间模式，显示滑块让用户自定义当前泡次的时间
-    custom_time = get_custom_time(st.session_state.current_step)
+    custom_time = data.get_custom_time(st.session_state.current_step)
 
 # 展示用户的选择
 st.success(f"你选择了：【{selected_tea}】  \n泡茶方式：盖碗 水量：140ml 茶叶：7g")
@@ -141,4 +143,4 @@ else:
 # ==========================================
 # 🌟 页面底部
 # ==========================================
-st.caption(f"🚀 当前应用版本：{APP_VERSION}")
+st.caption(f"🚀 当前应用版本：{data.APP_VERSION}")
