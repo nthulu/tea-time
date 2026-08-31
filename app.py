@@ -1,13 +1,15 @@
 # 导入框架
 import streamlit as st
-import time
+import importlib
+import data
+importlib.reload(data)  # 解决模块缓存问题
+from utils import play_audio_queue, hide_streamlit_style, get_custom_time
+
 
 # ==========================================
-# 🌟 页面配置与全局样式（使用 region 折叠）
+# 🌟 页面配置与全局样式
 # ==========================================
-
 # region 全局配置
-APP_VERSION = "v1.1.14"  # 应用版本号
 
 # 页面基础配置（必须是第一个 st 命令）
 st.set_page_config(
@@ -15,170 +17,44 @@ st.set_page_config(
     page_icon="🍵",  # 浏览器标签页的图标
     layout="wide",  # 关键：宽屏布局，完美适配手机端
 )
+hide_streamlit_style()  # 使用自定义CSS代码，隐藏默认菜单，让按钮并排显示
 
-# 自定义CSS代码
-# ==========================================
-# 🌟 新增：使用 CSS 强制按钮在移动端并排显示
-# ==========================================
-st.markdown(
-    """
-<style>
-/* 1. 强制列容器不折行，保持水平排列 */
-div[data-testid="stHorizontalBlock"] {
-    flex-wrap: nowrap !important;
-}
-
-/* 2. 强制列及其内部按钮按内容自适应宽度，消除 100% 撑满行为 */
-div[data-testid="stColumn"] {
-    min-width: 0 !important;
-    flex: 1 1 0% !important; /* 让两个列平分剩余空间 */
-}
-
-/* 3. 优化按钮在窄屏下的显示，防止文字溢出 */
-.stButton > button {
-    white-space: nowrap !important;
-    font-size: 0.85rem !important; /* 稍微缩小字体 */
-    padding: 0.4rem 0.8rem !important; /* 缩小按钮内边距 */
-    width: 100% !important; /* 让按钮撑满它所在的窄列 */
-}
-
-</style>
-""",
-    unsafe_allow_html=True,
-)
+st.title(f"🍵 泡茶倒计时", anchor="tea-timer")
 # endregion
 
-# ==========================================
-# 🌟 数据和工具函数（使用 def 封装）
-# ==========================================
-# region 数据和工具函数
-
-# 茶叶数据 字典来存储茶叶和对应的冲泡时间（秒）支持多泡次
-def get_tea_options():
-    """获取茶叶配置字典"""
-    return {
-        "台湾乌龙-四季春": [30, 30, 35, 35, 40, 45, 50],  # 台湾乌龙-四季春可以泡六次，分别是 30 秒、30 秒、35 秒、35 秒、40 秒、45 秒
-        "绿茶": [4, 5, 6],  # 绿茶可以泡三次，分别是 40 秒、50 秒、60 秒
-        "红茶": [15, 20, 25, 30, 35],
-        "乌龙茶": [20, 25, 30, 40, 50, 60],
-        "普洱茶": [120, 150, 180],
-    }
-
-# 🌟 新增：获取自定义泡茶时间函数
-def get_custom_time(current_step):
-    """
-    提供一个滑块让用户自定义当前泡次的时间。
-    参数 current_step: 当前是第几泡，用于显示在滑块标签上。
-    """
-    # 默认时间设为 60 秒，范围 10~300 秒
-    custom_time = st.slider(
-        label=f"自定义第 {current_step} 泡的时间（秒）",
-        min_value=10,
-        max_value=300,
-        value=60,
-        step=5,
-    )
-    return custom_time
-
-# 🌟 HTML5 音频队列播放函数
-def play_audio_queue(audio_url):
-    """HTML5 音频队列播放函数"""
-    audio_script = f"""
-    <script>
-    // 1. 初始化全局音频队列（如果还没创建的话）
-    if (!window.teaAudioQueue) {{
-        window.teaAudioQueue = [];
-        window.isTeaAudioPlaying = false;
-    }}
-    
-    // 2. 将新的提示音加入队列
-    window.teaAudioQueue.push("{audio_url}");
-    
-    // 3. 定义播放队列的函数
-    function playNextTeaAudio() {{
-        if (window.teaAudioQueue.length > 0 && !window.isTeaAudioPlaying) {{
-            window.isTeaAudioPlaying = true;
-            const url = window.teaAudioQueue.shift(); // 取出队首的声音
-            const audio = new Audio(url);
             
-            // 播放结束后，标记为空闲，并检查队列里还有没有声音
-            audio.onended = function() {{
-                window.isTeaAudioPlaying = false;
-                playNextTeaAudio(); 
-            }};
-            audio.play().catch(e => {{
-                // 如果还是被浏览器拦截，静默失败，不影响程序运行
-                console.log("Audio autoplay blocked:", e);
-                window.isTeaAudioPlaying = false;
-            }});
-        }}
-    }}
-    
-    // 4. 立即尝试播放
-    playNextTeaAudio();
-    </script>
-    """
-    st.components.v1.html(audio_script, height=0)
-
-# 参数初始化
-def init_session_state():
-    """
-    初始化 session_state 参数
-    只在首次加载 防止后续rerun覆盖
-    """
-    defaults = {
-        "app_version": APP_VERSION,  # 应用版本号
-        "time_list": [],  # 用来存储每次泡茶的时间记录
-        "current_step": 1,  # 用来记录当前是第几泡，从1开始
-        "tea_time": 0,  # 当前泡茶的剩余时间
-        "total_time": 0,  # 当前泡茶的总时间
-        "is_running": False,  # 当前是否正在倒计时
-        "just_finished": False  # 标记是否刚刚完成泡茶
-    }
-
-    # 遍历 赋值默认值
-    for key, value in defaults.items():
-        if key not in st.session_state:
-            st.session_state[key] = value
-# endregion
-            
-# ==========================================
-# 🌟 核心 UI 与业务逻辑（使用 region 折叠）
-# ==========================================
 # region 主程序逻辑
 
 # 初始化记忆背包（session_state）
-init_session_state()
-
-st.title(f"🍵 泡茶倒计时{APP_VERSION}")
+data.init_session_state()
 
 # 茶叶选择
-col1, col2 = st.columns(2)  # 把按钮分成两列
+tea_options = data.get_tea_options()  # 获取茶叶配置字典
 
+col1, col2 = st.columns(2)  # 分成两列
 with col1:
     st.write("请选择你要泡的茶叶：")
 with col2:
-    tea_options = get_tea_options()
     # 创建下拉框
     selected_tea = st.selectbox(
         label="请选择你要泡的茶叶：", options=list(tea_options.keys()),label_visibility="collapsed"
     )
 
-# 🌟 新增：模式切换开关
+# 自定义时间模式切换开关
 use_custom_time = st.toggle("🎛️ 开启自定义时间模式", value=False)
 if use_custom_time:
     # 如果开启自定义时间模式，显示滑块让用户自定义当前泡次的时间
-    custom_time = get_custom_time(st.session_state.current_step)
+    custom_time = data.get_custom_time(st.session_state.current_step)
 
 # 展示用户的选择
-st.success(f"你选择了：【{selected_tea}】泡茶方式：盖碗 水量：140ml 茶叶：7g")
-st.caption(f"💡 提示：这种茶建议冲泡 {tea_options[selected_tea]} 秒")
+st.success(f"你选择了：【{selected_tea}】  \n泡茶方式：盖碗 水量：140ml 茶叶：7g")
+st.caption(f"💡 这种茶建议冲泡 {tea_options[selected_tea]} 秒")
 
 # 创建按钮逻辑
 col1, col2 = st.columns(2)  # 把按钮分成两列
 
 with col1:
-    if st.button("☕ 开始泡茶", use_container_width=True):
+    if st.button("☕ 开始泡茶", key="start",use_container_width=True):
         # 🌟 核心修改：根据模式决定使用哪种时间
         if use_custom_time:
             # 自定义模式：使用滑块的时间，并包装成单元素列表（兼容多泡次逻辑）
@@ -187,22 +63,23 @@ with col1:
             # 默认模式：使用预设的茶叶时间列表
             st.session_state.time_list = tea_options[selected_tea]
 
-        if st.session_state.current_step > len(tea_options[selected_tea]):
-            st.warning(
-                f"⚠️ {selected_tea} 最多只能泡 {len(tea_options[selected_tea])} 次哦，再泡就没味道啦。"
-            )
+        if not use_custom_time and st.session_state.current_step > len(tea_options[selected_tea]):
+            st.session_state.warning_msg=f"⚠️ {selected_tea} 最多只能泡 {len(tea_options[selected_tea])} 次哦。如果一定要继续泡，请开启自定义时间模式。或者停止/重置后再开始。"
         else:
             # 取出当前泡数的时间
             if use_custom_time:
                 st.session_state.tea_time = st.session_state.time_list[0]  # 只有一个自定义时间
+                st.session_state.warning_msg=f"⚠️ {selected_tea} 最多只能泡 {len(tea_options[selected_tea])} 次哦，当前已泡 {st.session_state.current_step} 次。"
             else:
                 st.session_state.tea_time = st.session_state.time_list[st.session_state.current_step - 1]
+                st.session_state.warning_msg=""  # 清空警告消息
             st.session_state.total_time = st.session_state.tea_time  # 记录总时间
             st.session_state.is_running = True
+            
             st.rerun()  # 点击后立刻刷新页面，开始倒计时
 
 with col2:
-    if st.button("⏹ 停止/重置", use_container_width=True):
+    if st.button("⏹ 停止/重置", key="reset",use_container_width=True):
         st.session_state.is_running = False
         st.session_state.tea_time = 0
         st.session_state.current_step = 1
@@ -211,7 +88,7 @@ with col2:
 # endregion
 
 # ==========================================
-# 🌟 倒计时展示与结束提示（最终修复）
+# 倒计时展示与结束提示
 # ==========================================
 
 # 正在倒计时中（使用 st.fragment 实现每秒独立刷新）
@@ -244,7 +121,7 @@ elif st.session_state.tea_time <= 0 and st.session_state.is_running:
 
     st.balloons()  # 放个气球动画庆祝一下！
     st.success(
-        f"✅ {selected_tea} 第{st.session_state.current_step}泡完成！请享用你的茶！"
+        f"✅ {selected_tea} 第{st.session_state.current_step-1}泡完成！请享用你的茶！"
     )
 
     play_audio_queue("https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3")
@@ -253,11 +130,17 @@ elif st.session_state.tea_time <= 0 and st.session_state.is_running:
     st.session_state.is_running = False  # 重置状态
 
     st.info(
-        f"💡 提示：你已经泡了 {st.session_state.current_step - 1} 次，下一泡建议冲泡 {tea_options[selected_tea][st.session_state.current_step - 1] if st.session_state.current_step <= len(tea_options[selected_tea]) else 'N/A'} 秒。"
+        f"💡 你已经泡了 {st.session_state.current_step - 1} 次，下一泡建议冲泡 {tea_options[selected_tea][st.session_state.current_step - 1] if st.session_state.current_step <= len(tea_options[selected_tea]) else '无可用建议'} 秒。"
     )
     # endregion
+# 创建告警占位符
+warning_placeholder = st.empty()
+if st.session_state.warning_msg:
+    warning_placeholder.warning(st.session_state.warning_msg)
+else:
+    warning_placeholder.empty()
 
 # ==========================================
 # 🌟 页面底部
 # ==========================================
-st.caption(f"🚀 当前应用版本：{st.session_state.app_version}")
+st.caption(f"🚀 当前应用版本：{data.APP_VERSION}")

@@ -1,6 +1,12 @@
 # 忽略虚拟环境
 .venv/
+docs/
 __pycache__/
+*.pyc
+*.csv
+*.json
+*.log
+.streamlit/
 
 # 忽略垃圾文件
 .DS_Store
