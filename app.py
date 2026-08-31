@@ -16,10 +16,38 @@ st.set_page_config(
     page_title="泡茶倒计时",
     page_icon="🍵",  # 浏览器标签页的图标
     layout="wide",  # 关键：宽屏布局，完美适配手机端
+    initial_sidebar_state="expanded", # 侧边栏默认显示
 )
-hide_streamlit_style()  # 使用自定义CSS代码，隐藏默认菜单，让按钮并排显示
 
-st.title(f"🍵 泡茶倒计时", anchor="tea-timer")
+hide_streamlit_style()  # 使用自定义CSS代码，隐藏默认菜单，让按钮并排显示
+    
+st.title(f"🍵 泡茶倒计时", anchor="tea-timer",)
+
+# ==========================================
+# 🌟 侧边栏：使用说明
+# ==========================================
+with st.sidebar:
+    st.header("📖 使用说明")
+    st.markdown("""
+    欢迎使用专属泡茶倒计时工具！
+    
+    **🍵 默认模式：**
+    1. 在下拉框中选择你正在泡的茶叶。
+    2. 点击“开始泡茶”，程序会按照预设的最佳时间为你倒计时。
+    3. 时间到后会有声音提示，你可以继续泡下一泡。
+    
+    **🎛️ 自定义模式：**
+    1. 打开“开启自定义时间模式”开关。
+    2. 拖动滑块，自由设置这一泡的秒数。
+    3. 点击“开始泡茶”即可。
+    
+    **⏹️ 重置：**
+    随时点击“停止/重置”按钮，可以清空当前状态，重新开始。
+    """)
+    
+    # 可以在侧边栏底部也放一个版本号
+    current_branch = get_git_branch()
+    st.caption(f"🚀 当前应用版本：{data.APP_VERSION}   \n  分支： {current_branch}")
 # endregion
             
 # region 主程序逻辑
@@ -142,5 +170,3 @@ else:
 # ==========================================
 # 🌟 页面底部
 # ==========================================
-current_branch = get_git_branch()
-st.caption(f"🚀 当前应用版本：{data.APP_VERSION} | {current_branch}")
