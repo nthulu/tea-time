@@ -1,4 +1,6 @@
 # utils.py
+import subprocess
+import os
 import streamlit as st
 
 def play_audio_queue(audio_url):
@@ -124,3 +126,19 @@ def get_custom_time(current_step):
         step=5,
     )
     return custom_time
+
+def get_git_branch() -> str:
+    """获取当前git分支名称，获取失败返回unknown"""
+    # print("utils 当前工作目录:", os.getcwd())   # 打印当前目录
+    try:
+        result = subprocess.run(
+            ["git", "rev-parse", "--abbrev-ref", "HEAD"],
+            capture_output=True,
+            text=True,
+            check=True
+        )
+        return result.stdout.strip()
+    except Exception as e:
+        # 没有git、没有.git目录、打包部署环境都会走到这里
+        # print("git调用异常：", repr(e))   # 打印真实报错
+        return "unknown"

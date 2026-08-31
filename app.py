@@ -3,7 +3,7 @@ import streamlit as st
 import importlib
 import data
 importlib.reload(data)  # 解决模块缓存问题
-from utils import play_audio_queue, hide_streamlit_style, get_custom_time
+from utils import play_audio_queue, hide_streamlit_style, get_git_branch, get_custom_time
 
 
 # ==========================================
@@ -21,7 +21,6 @@ hide_streamlit_style()  # 使用自定义CSS代码，隐藏默认菜单，让按
 
 st.title(f"🍵 泡茶倒计时", anchor="tea-timer")
 # endregion
-
             
 # region 主程序逻辑
 
@@ -44,7 +43,7 @@ with col2:
 use_custom_time = st.toggle("🎛️ 开启自定义时间模式", value=False)
 if use_custom_time:
     # 如果开启自定义时间模式，显示滑块让用户自定义当前泡次的时间
-    custom_time = data.get_custom_time(st.session_state.current_step)
+    custom_time = get_custom_time(st.session_state.current_step)
 
 # 展示用户的选择
 st.success(f"你选择了：【{selected_tea}】  \n泡茶方式：盖碗 水量：140ml 茶叶：7g")
@@ -143,4 +142,5 @@ else:
 # ==========================================
 # 🌟 页面底部
 # ==========================================
-st.caption(f"🚀 当前应用版本：{data.APP_VERSION}")
+current_branch = get_git_branch()
+st.caption(f"🚀 当前应用版本：{data.APP_VERSION} | {current_branch}")
