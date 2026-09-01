@@ -1,7 +1,7 @@
 # tea_data.py
 import streamlit as st
 
-APP_VERSION = "v1.3.24a"  # 应用版本号
+APP_VERSION = "v1.3.25a"  # 应用版本号
 
 def get_tea_options():
     """获取茶叶配置字典"""

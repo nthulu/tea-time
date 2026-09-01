@@ -170,6 +170,33 @@ div[data-testid="stColumn"] {
     st.html(hide_style)
     # st.markdown(hide_style, unsafe_allow_html=True)
 
+def render_sidebar(info:dict):
+    """渲染侧边栏内容"""
+    app_version = info.get("app_version", "unknown")
+    current_branch = info.get("current_branch", "unknown")
+
+    with st.sidebar:
+        st.sidebar.header("📖 使用说明")
+        st.sidebar.markdown("""
+        欢迎使用hulu专属泡茶倒计时工具！
+        
+        **🍵 默认模式：**
+        1. 在下拉框中选择茶叶。
+        2. 点击“开始泡茶”，程序会按照预设的最佳时间为你倒计时。
+        3. 时间到后会有声音提示，你可以继续泡下一泡。
+        4. 超过默认泡数限制后，程序会提示你使用自定义时间模式。
+        
+        **🎛️ 自定义模式：**
+        1. 打开“开启自定义时间模式”开关。
+        2. 拖动滑块，设置这一泡的秒数。
+        3. 点击“开始泡茶”即可。
+        
+        **⏹️ 重置：**
+        点击“停止/重置”按钮，可以清空当前状态，重新开始。
+        """)
+        # 侧边栏底部显示版本号
+        st.caption(f"🚀 {app_version}（{current_branch}）")
+
 # 获取自定义泡茶时间函数
 def get_custom_time(current_step):
     """

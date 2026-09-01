@@ -2,9 +2,13 @@
 import streamlit as st
 import importlib
 import data
-importlib.reload(data)  # 解决模块缓存问题
-from utils import play_audio_queue, hide_streamlit_style, get_git_branch, get_custom_time
+import utils
 
+# ✅开发用：强制重载，解决开发中模块缓存问题，发布版本移除 reload 代码。
+importlib.reload(data)  # 生产环境中注释掉
+importlib.reload(utils)  # 生产环境中注释掉
+
+from utils import play_audio_queue, hide_streamlit_style, get_git_branch, get_custom_time, render_sidebar
 
 # ==========================================
 # 🌟 页面配置与全局样式
@@ -26,29 +30,8 @@ st.title(f"🍵 泡茶倒计时", anchor="tea-timer",)
 # ==========================================
 # 🌟 侧边栏：使用说明
 # ==========================================
-with st.sidebar:
-    st.header("📖 使用说明")
-    st.markdown("""
-    欢迎使用hulu专属泡茶倒计时工具！
-    
-    **🍵 默认模式：**
-    1. 在下拉框中选择茶叶。
-    2. 点击“开始泡茶”，程序会按照预设的最佳时间为你倒计时。
-    3. 时间到后会有声音提示，你可以继续泡下一泡。
-    4. 超过默认泡数限制后，程序会提示你使用自定义时间模式。
-    
-    **🎛️ 自定义模式：**
-    1. 打开“开启自定义时间模式”开关。
-    2. 拖动滑块，设置这一泡的秒数。
-    3. 点击“开始泡茶”即可。
-    
-    **⏹️ 重置：**
-    点击“停止/重置”按钮，可以清空当前状态，重新开始。
-    """)
-    
-    # 可以在侧边栏底部也放一个版本号
-    current_branch = get_git_branch()
-    st.caption(f"🚀 当前应用版本：{data.APP_VERSION}   \n  分支： {current_branch}")
+render_sidebar({"app_version": data.APP_VERSION, "current_branch": get_git_branch()})
+
 # endregion
             
 # region 主程序逻辑
