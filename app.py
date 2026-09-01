@@ -1,11 +1,16 @@
+# ====================== TODO 遗留 2026‑09‑01 今日开发暂停 ======================
+# 遗留问题清单：
+# 1. 选择自定义时间后，停止按钮消失，需点击继续泡茶
+# =============================================================================
+
 # 导入框架
 import streamlit as st
 import importlib
-import data
+import tea_data
 import utils
 
 # ✅开发用：强制重载，解决开发中模块缓存问题，发布版本移除 reload 代码。
-importlib.reload(data)  # 生产环境中注释掉
+importlib.reload(tea_data)  # 生产环境中注释掉
 importlib.reload(utils)  # 生产环境中注释掉
 
 from utils import play_audio_queue, hide_streamlit_style, get_git_branch, get_custom_time, render_sidebar
@@ -19,8 +24,8 @@ from utils import play_audio_queue, hide_streamlit_style, get_git_branch, get_cu
 st.set_page_config(
     page_title="泡茶倒计时",
     page_icon="🍵",  # 浏览器标签页的图标
-    layout="wide",  # 关键：宽屏布局，完美适配手机端
-    initial_sidebar_state="collapsed", # 侧边栏默认折叠
+    layout="centered",  # 关键：宽屏布局，完美适配手机端
+    initial_sidebar_state="expanded",  # 侧边栏默认展开
 )
 
 hide_streamlit_style()  # 使用自定义CSS代码，隐藏默认菜单，让按钮并排显示
@@ -30,29 +35,29 @@ st.title(f"🍵 泡茶倒计时", anchor="tea-timer",)
 # ==========================================
 # 🌟 侧边栏：使用说明
 # ==========================================
-render_sidebar({"app_version": data.APP_VERSION, "current_branch": get_git_branch()})
-
+render_sidebar({"app_version": tea_data.APP_VERSION, "current_branch": get_git_branch()})
 # endregion
             
 # region 主程序逻辑
 
 # 初始化记忆背包（session_state）
-data.init_session_state()
+tea_data.init_session_state()
 
-# 茶叶选择
-tea_options = data.get_tea_options()  # 获取茶叶配置字典
+# region 茶叶选择
+tea_options = tea_data.get_tea_options()  # 获取茶叶配置字典
 
-col1, col2 = st.columns(2)  # 分成两列
+# 创建两列
+col1, col2 = st.columns(2)  
 with col1:
     st.write("请选择你要泡的茶叶：")
 with col2:
-    # 创建下拉框
-    selected_tea = st.selectbox(
-        label="请选择你要泡的茶叶：", options=list(tea_options.keys()),label_visibility="collapsed"
-    )
+    use_custom_time = st.toggle("🎛️ 自定义时间模式", value=False)
 
-# 自定义时间模式切换开关
-use_custom_time = st.toggle("🎛️ 开启自定义时间模式", value=False)
+selected_tea = st.selectbox(
+    label="请选择你要泡的茶叶：", options=list(tea_options.keys()),label_visibility="collapsed"
+)
+
+
 if use_custom_time:
     # 如果开启自定义时间模式，显示滑块让用户自定义当前泡次的时间
     custom_time = get_custom_time(st.session_state.current_step)
@@ -61,7 +66,7 @@ if use_custom_time:
 st.success(f"你选择了：【{selected_tea}】  \n泡茶方式：盖碗 水量：140ml 茶叶：7g")
 st.caption(f"💡 这种茶建议冲泡 {tea_options[selected_tea]} 秒")
 
-# 创建按钮逻辑
+# region 创建按钮逻辑
 col1, col2 = st.columns(2)  # 把按钮分成两列
 
 with col1:
@@ -101,7 +106,7 @@ with col2:
 # endregion
 
 # ==========================================
-# 倒计时展示与结束提示
+# region 倒计时提示
 # ==========================================
 
 # 正在倒计时中（使用 st.fragment 实现每秒独立刷新）
@@ -112,9 +117,8 @@ if st.session_state.is_running and st.session_state.tea_time > 0:
         current_time = st.session_state.tea_time
         minutes, seconds = divmod(current_time, 60)
 
-        # 创建占位符
+        # 倒计时占位符
         countdown_placeholder = st.empty()
-        # 显示大数字倒计时
         countdown_placeholder.metric(
             label=f"⏳ {selected_tea} 第{st.session_state.current_step}泡：剩余时间",
             value=f"{minutes:02d}:{seconds:02d} ")
@@ -145,8 +149,9 @@ elif st.session_state.tea_time <= 0 and st.session_state.is_running:
     st.info(
         f"💡 你已经泡了 {st.session_state.current_step - 1} 次，下一泡建议冲泡 {tea_options[selected_tea][st.session_state.current_step - 1] if st.session_state.current_step <= len(tea_options[selected_tea]) else '无可用建议'} 秒。"
     )
-    # endregion
-# 创建告警占位符
+# endregion
+
+# region 告警提示
 warning_placeholder = st.empty()
 if st.session_state.warning_msg:
     warning_placeholder.warning(st.session_state.warning_msg)
@@ -156,3 +161,5 @@ else:
 # ==========================================
 # 🌟 页面底部
 # ==========================================
+with st.expander(label="🔍 调试：Session State",expanded=True):
+    st.write(st.session_state)
