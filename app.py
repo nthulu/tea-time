@@ -16,7 +16,7 @@ st.set_page_config(
     page_title="泡茶倒计时",
     page_icon="🍵",  # 浏览器标签页的图标
     layout="wide",  # 关键：宽屏布局，完美适配手机端
-    initial_sidebar_state="expanded", # 侧边栏默认显示
+    initial_sidebar_state="collapsed", # 侧边栏默认折叠
 )
 
 hide_streamlit_style()  # 使用自定义CSS代码，隐藏默认菜单，让按钮并排显示
@@ -29,20 +29,21 @@ st.title(f"🍵 泡茶倒计时", anchor="tea-timer",)
 with st.sidebar:
     st.header("📖 使用说明")
     st.markdown("""
-    欢迎使用专属泡茶倒计时工具！
+    欢迎使用hulu专属泡茶倒计时工具！
     
     **🍵 默认模式：**
-    1. 在下拉框中选择你正在泡的茶叶。
+    1. 在下拉框中选择茶叶。
     2. 点击“开始泡茶”，程序会按照预设的最佳时间为你倒计时。
     3. 时间到后会有声音提示，你可以继续泡下一泡。
+    4. 超过默认泡数限制后，程序会提示你使用自定义时间模式。
     
     **🎛️ 自定义模式：**
     1. 打开“开启自定义时间模式”开关。
-    2. 拖动滑块，自由设置这一泡的秒数。
+    2. 拖动滑块，设置这一泡的秒数。
     3. 点击“开始泡茶”即可。
     
     **⏹️ 重置：**
-    随时点击“停止/重置”按钮，可以清空当前状态，重新开始。
+    点击“停止/重置”按钮，可以清空当前状态，重新开始。
     """)
     
     # 可以在侧边栏底部也放一个版本号
@@ -81,7 +82,8 @@ st.caption(f"💡 这种茶建议冲泡 {tea_options[selected_tea]} 秒")
 col1, col2 = st.columns(2)  # 把按钮分成两列
 
 with col1:
-    if st.button("☕ 开始泡茶", key="start",use_container_width=True):
+    btn_text = "⏸️ 继续泡茶" if st.session_state.is_running else "☕ 开始泡茶"
+    if st.button(btn_text, key="start",use_container_width=True):
         # 🌟 核心修改：根据模式决定使用哪种时间
         if use_custom_time:
             # 自定义模式：使用滑块的时间，并包装成单元素列表（兼容多泡次逻辑）
@@ -91,12 +93,12 @@ with col1:
             st.session_state.time_list = tea_options[selected_tea]
 
         if not use_custom_time and st.session_state.current_step > len(tea_options[selected_tea]):
-            st.session_state.warning_msg=f"⚠️ {selected_tea} 最多只能泡 {len(tea_options[selected_tea])} 次哦。如果一定要继续泡，请开启自定义时间模式。或者停止/重置后再开始。"
+            st.session_state.warning_msg=f"⚠️ {selected_tea} 建议最多泡 {len(tea_options[selected_tea])} 次哦。如果想继续泡，请使用自定义时间模式。否则请点击停止/重置。"
         else:
             # 取出当前泡数的时间
             if use_custom_time:
                 st.session_state.tea_time = st.session_state.time_list[0]  # 只有一个自定义时间
-                st.session_state.warning_msg=f"⚠️ {selected_tea} 最多只能泡 {len(tea_options[selected_tea])} 次哦，当前已泡 {st.session_state.current_step} 次。"
+                st.session_state.warning_msg=f"⚠️ {selected_tea} 建议最多泡 {len(tea_options[selected_tea])} 次哦，当前已泡 {st.session_state.current_step} 次。"
             else:
                 st.session_state.tea_time = st.session_state.time_list[st.session_state.current_step - 1]
                 st.session_state.warning_msg=""  # 清空警告消息
@@ -106,11 +108,12 @@ with col1:
             st.rerun()  # 点击后立刻刷新页面，开始倒计时
 
 with col2:
-    if st.button("⏹ 停止/重置", key="reset",use_container_width=True):
-        st.session_state.is_running = False
-        st.session_state.tea_time = 0
-        st.session_state.current_step = 1
-        st.rerun()  # 点击后停止倒计时，重置记忆背包
+    if st.session_state.is_running:
+        if st.button("⏹ 停止/重置", key="reset",use_container_width=True):
+            st.session_state.is_running = False
+            st.session_state.tea_time = 0
+            st.session_state.current_step = 1
+            st.rerun()  # 点击后停止倒计时，重置记忆背包
 
 # endregion
 
