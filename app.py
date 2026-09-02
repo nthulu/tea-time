@@ -57,14 +57,35 @@ selected_tea = st.selectbox(
     label="请选择你要泡的茶叶：", options=list(tea_options.keys()),label_visibility="collapsed"
 )
 
+# 获取原始时间列表
+original_time_list = tea_options[selected_tea]
 
+# 据模式决定使用哪种时间列表
 if use_custom_time:
     # 如果开启自定义时间模式，显示滑块让用户自定义当前泡次的时间
     custom_time = get_custom_time(st.session_state.current_step)
+    active_time_list = [custom_time]  # 使用自定义时间列表
+else:
+    active_time_list = original_time_list  # 使用默认的茶叶时间列表
+
+# 运行中状态的安全钳制（Clamp）
+# 确保切换模式时，current_step 不会越界，且 is_running 不被重置
+if st.session_state.is_running:
+    max_step = len(active_time_list) - 1
+    if st.session_state.current_step > max_step:
+        # 越界时停留在最后一泡，保持运行状态
+        st.session_state.current_step = max_step
+    # 防御性检查：防止 step 为负数
+    if st.session_state.current_step < 0:
+        st.session_state.current_step = 0
+
+# 将处理后的安全列表存入 session_state
+# 供后续 @st.fragment 和按钮渲染统一使用，避免重复计算导致不一致
+st.session_state.active_time_list = active_time_list
 
 # 展示用户的选择
 st.success(f"你选择了：【{selected_tea}】  \n泡茶方式：盖碗 水量：140ml 茶叶：7g")
-st.caption(f"💡 这种茶建议冲泡 {tea_options[selected_tea]} 秒")
+st.caption(f"💡 这种茶建议冲泡 {len(original_time_list)} 次，{original_time_list} 秒")
 
 # region 创建按钮逻辑
 col1, col2 = st.columns(2)  # 把按钮分成两列
@@ -72,31 +93,19 @@ col1, col2 = st.columns(2)  # 把按钮分成两列
 with col1:
     btn_text = "⏸️ 继续泡茶" if st.session_state.is_running else "☕ 开始泡茶"
     if st.button(btn_text, key="start",use_container_width=True):
-        # 🌟 核心修改：根据模式决定使用哪种时间
-        if use_custom_time:
-            # 自定义模式：使用滑块的时间，并包装成单元素列表（兼容多泡次逻辑）
-            st.session_state.time_list = [custom_time]
-        else:
-            # 默认模式：使用预设的茶叶时间列表
-            st.session_state.time_list = tea_options[selected_tea]
-
-        if not use_custom_time and st.session_state.current_step > len(tea_options[selected_tea]):
+        if st.session_state.current_step > len(tea_options[selected_tea]):
             st.session_state.warning_msg=f"⚠️ {selected_tea} 建议最多泡 {len(tea_options[selected_tea])} 次哦。如果想继续泡，请使用自定义时间模式。否则请点击停止/重置。"
         else:
             # 取出当前泡数的时间
-            if use_custom_time:
-                st.session_state.tea_time = st.session_state.time_list[0]  # 只有一个自定义时间
-                st.session_state.warning_msg=f"⚠️ {selected_tea} 建议最多泡 {len(tea_options[selected_tea])} 次哦，当前已泡 {st.session_state.current_step} 次。"
-            else:
-                st.session_state.tea_time = st.session_state.time_list[st.session_state.current_step - 1]
-                st.session_state.warning_msg=""  # 清空警告消息
+            st.session_state.tea_time = st.session_state.active_time_list[st.session_state.current_step - 1]
+            st.session_state.warning_msg=""  # 清空警告消息
             st.session_state.total_time = st.session_state.tea_time  # 记录总时间
             st.session_state.is_running = True
             
             st.rerun()  # 点击后立刻刷新页面，开始倒计时
 
 with col2:
-    if st.session_state.is_running:
+    if st.session_state.is_running :
         if st.button("⏹ 停止/重置", key="reset",use_container_width=True):
             st.session_state.is_running = False
             st.session_state.tea_time = 0
@@ -106,7 +115,7 @@ with col2:
 # endregion
 
 # ==========================================
-# region 倒计时提示
+# region 倒计时Fragment 
 # ==========================================
 
 # 正在倒计时中（使用 st.fragment 实现每秒独立刷新）
