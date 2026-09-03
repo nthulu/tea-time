@@ -170,6 +170,27 @@ div[data-testid="stColumn"] {
     st.html(hide_style)
     # st.markdown(hide_style, unsafe_allow_html=True)
 
+def render_sidebar(info:dict):
+    """渲染侧边栏内容"""
+    app_version = info.get("app_version", "unknown")
+    current_branch = info.get("current_branch", "unknown")
+
+    with st.sidebar:
+        st.sidebar.header("🍵 泡杯茶吧")
+        st.sidebar.markdown("""
+夫茶有性，水火有时，泡法各异。水多则淡，水少则酽；温高则烈，温低则寂。出汤太急，味薄而香浮；出汤太迟，苦涩尽出矣。
+
+余每注水，必观汤色，色正即出。数泡之后，复揭盖嗅其叶底，香未尽则可续，香已衰则止。
+
+故善饮者，察茶之老嫩，辨器之大小，调水火之候，控出汤之时。使芽叶舒展，芬芳尽释，而不失其筋骨。
+
+茶无定法，适口为珍。久之自成法度，能使茶尽其性，而不负此一盏，亦不负己身。
+
+泡杯茶吧，越来越懂你的茶，也越来越懂你自己。
+""")
+        # 侧边栏底部显示版本号
+        st.caption(f"🚀 Designed by hulu ©2026 （{app_version}/{current_branch}）")
+
 # 获取自定义泡茶时间函数
 def get_custom_time(current_step):
     """
@@ -179,9 +200,9 @@ def get_custom_time(current_step):
     # 默认时间设为 60 秒，范围 10~300 秒
     custom_time = st.slider(
         label=f"自定义第 {current_step} 泡的时间（秒）",
-        min_value=10,
+        min_value=5,
         max_value=300,
-        value=60,
+        value=5,
         step=5,
     )
     return custom_time
