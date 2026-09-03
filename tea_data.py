@@ -29,6 +29,7 @@ def init_session_state():
         "total_time": 0,  # 当前泡茶的总时间
         "is_running": False,  # 当前是否正在倒计时
         "warning_msg": "",  # 警告消息
+        "is_active": False,  # 用来标记当前是否在泡茶对话中
     }
 
     # 遍历 赋值默认值

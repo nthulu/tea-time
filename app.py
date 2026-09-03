@@ -71,10 +71,9 @@ else:
 # 运行中状态的安全钳制（Clamp）
 # 确保切换模式时，current_step 不会越界，且 is_running 不被重置
 if st.session_state.is_running:
-    max_step = len(active_time_list) - 1
+    max_step = len(original_time_list) 
     if st.session_state.current_step > max_step:
-        # 越界时停留在最后一泡，保持运行状态
-        st.session_state.current_step = max_step
+        st.session_state.current_step = max_step + 1  # 保持在最后一泡的下一泡，方便用户自定义时间模式继续泡茶
     # 防御性检查：防止 step 为负数
     if st.session_state.current_step < 0:
         st.session_state.current_step = 0
@@ -91,22 +90,31 @@ st.caption(f"💡 这种茶建议冲泡 {len(original_time_list)} 次，{origina
 col1, col2 = st.columns(2)  # 把按钮分成两列
 
 with col1:
-    btn_text = "⏸️ 继续泡茶" if st.session_state.is_running else "☕ 开始泡茶"
+    btn_text = "⏸️ 继续泡茶" if st.session_state.is_active else "☕ 开始泡茶"
     if st.button(btn_text, key="start",use_container_width=True):
-        if st.session_state.current_step > len(tea_options[selected_tea]):
-            st.session_state.warning_msg=f"⚠️ {selected_tea} 建议最多泡 {len(tea_options[selected_tea])} 次哦。如果想继续泡，请使用自定义时间模式。否则请点击停止/重置。"
+        if use_custom_time:
+            st.session_state.tea_time = st.session_state.active_time_list[0]  # 使用自定义时间列表的第一泡时间
+            st.session_state.warning_msg=""  # 清空警告消息
+            st.session_state.total_time = st.session_state.tea_time  # 记录总时间
+            st.session_state.is_running = True
+            st.session_state.is_active = True
+            st.rerun()  # 点击后立刻刷新页面，开始倒计时
+        elif st.session_state.current_step > len(original_time_list):
+            st.session_state.warning_msg=f"⚠️ {selected_tea} 建议最多泡 {len(original_time_list)} 次哦。如果想继续泡，请使用自定义时间模式。否则请点击停止/重置。"
         else:
             # 取出当前泡数的时间
             st.session_state.tea_time = st.session_state.active_time_list[st.session_state.current_step - 1]
             st.session_state.warning_msg=""  # 清空警告消息
             st.session_state.total_time = st.session_state.tea_time  # 记录总时间
             st.session_state.is_running = True
+            st.session_state.is_active = True
             
             st.rerun()  # 点击后立刻刷新页面，开始倒计时
 
 with col2:
-    if st.session_state.is_running :
+    if st.session_state.is_active:
         if st.button("⏹ 停止/重置", key="reset",use_container_width=True):
+            st.session_state.is_active = False
             st.session_state.is_running = False
             st.session_state.tea_time = 0
             st.session_state.current_step = 1
@@ -156,7 +164,7 @@ elif st.session_state.tea_time <= 0 and st.session_state.is_running:
     st.session_state.is_running = False  # 重置状态
 
     st.info(
-        f"💡 你已经泡了 {st.session_state.current_step - 1} 次，下一泡建议冲泡 {tea_options[selected_tea][st.session_state.current_step - 1] if st.session_state.current_step <= len(tea_options[selected_tea]) else '无可用建议'} 秒。"
+        f"💡 你已经泡了 {st.session_state.current_step - 1} 次，下一泡建议冲泡 {tea_options[selected_tea][st.session_state.current_step - 1] if st.session_state.current_step <= len(tea_options[selected_tea]) else '[无建议]'} 秒。"
     )
 # endregion
 

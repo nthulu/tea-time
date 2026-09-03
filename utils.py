@@ -200,9 +200,9 @@ def get_custom_time(current_step):
     # 默认时间设为 60 秒，范围 10~300 秒
     custom_time = st.slider(
         label=f"自定义第 {current_step} 泡的时间（秒）",
-        min_value=10,
+        min_value=5,
         max_value=300,
-        value=60,
+        value=5,
         step=5,
     )
     return custom_time
