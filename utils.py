@@ -165,6 +165,15 @@ div[data-testid="stColumn"] {
 [data-testid="stSidebar"] [data-testid="stHeading"] h2 {
     margin-top: 0 !important;
 }
+/* 放大所有 metric 组件的 label 和 value */
+div[data-testid="metric-container"] > label {
+    font-size: 24px !important;   /* 标签字号 */
+    font-weight: bold !important;
+}
+div[data-testid="metric-container"] > div {
+    font-size: 48px !important;   /* 数值字号 */
+    font-weight: bold !important;
+}
 </style>
     """
     st.html(hide_style)
