@@ -196,7 +196,7 @@ def render_sidebar(info:dict):
 茶无定法，适口为珍。久之自成法度，能使茶尽其性，而不负此一盏，亦不负己身。
 """)
         # 侧边栏底部显示版本号
-        st.caption(f"🚀 Designed by hulu ©2026 （{app_version}/{current_branch}）")
+        st.caption(f"🚀 Designed by hulu ©2026   \n（{app_version} {current_branch}）")
 
 # 获取自定义泡茶时间函数
 def get_custom_time(current_step):
@@ -214,6 +214,22 @@ def get_custom_time(current_step):
     )
     return custom_time
 
+def get_git_repo_name() -> str:
+    """获取当前git仓库名称，获取失败返回unknown"""
+    try:
+        url = subprocess.check_output(
+            ["git", "remote", "get-url", "origin"],
+            cwd=os.path.dirname(__file__),
+            text=True,
+            stderr=subprocess.STDOUT
+        ).strip()
+        repo = url.split("/")[-1]
+        if repo.endswith(".git"):
+            repo = repo[:-4]
+        return repo
+    except Exception:
+        return "unknown_repo"
+    
 def get_git_branch() -> str:
     """获取当前git分支名称，获取失败返回unknown"""
     # print("utils 当前工作目录:", os.getcwd())   # 打印当前目录

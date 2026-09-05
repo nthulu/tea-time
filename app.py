@@ -13,7 +13,7 @@ import utils
 importlib.reload(tea_data)  # 生产环境中注释掉
 importlib.reload(utils)  # 生产环境中注释掉
 
-from utils import play_audio_queue, hide_streamlit_style, get_git_branch, get_custom_time, render_sidebar
+from utils import get_git_repo_name, play_audio_queue, hide_streamlit_style, get_git_branch, get_custom_time, render_sidebar
 
 # ==========================================
 # 🌟 页面配置与全局样式
@@ -35,7 +35,7 @@ st.title(f"🍵 泡茶倒计时", anchor="tea-timer",)
 # ==========================================
 # 🌟 侧边栏：使用说明
 # ==========================================
-render_sidebar({"app_version": tea_data.APP_VERSION, "current_branch": get_git_branch()})
+render_sidebar({"app_version": tea_data.APP_VERSION, "current_branch": get_git_repo_name() + "/" + get_git_branch()})
 # endregion
             
 # region 主程序逻辑
