@@ -185,7 +185,7 @@ def render_sidebar(info:dict):
     current_branch = info.get("current_branch", "unknown")
 
     with st.sidebar:
-        st.sidebar.header("🍵 泡杯茶吧")
+        st.sidebar.header("🍵 泡茶赋")
         st.sidebar.markdown("""
 夫茶有性，水火有时，泡法各异。水多则淡，水少则酽；温高则烈，温低则寂。出汤太急，味薄而香浮；出汤太迟，苦涩尽出矣。
 
@@ -194,8 +194,6 @@ def render_sidebar(info:dict):
 故善饮者，察茶之老嫩，辨器之大小，调水火之候，控出汤之时。使芽叶舒展，芬芳尽释，而不失其筋骨。
 
 茶无定法，适口为珍。久之自成法度，能使茶尽其性，而不负此一盏，亦不负己身。
-
-泡杯茶吧，越来越懂你的茶，也越来越懂你自己。
 """)
         # 侧边栏底部显示版本号
         st.caption(f"🚀 Designed by hulu ©2026 （{app_version}/{current_branch}）")
