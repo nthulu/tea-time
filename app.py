@@ -46,15 +46,27 @@ tea_data.init_session_state()
 # region 茶叶选择
 tea_options = tea_data.get_tea_options()  # 获取茶叶配置字典
 
+# 监听 toggle 变化（通过一个隐藏的按钮或回调）
+if st.session_state.force_toggle_off:
+    st.session_state.custom_time_toggle = False
+    st.session_state.force_toggle_off = False
+
+
 # 创建两列
 col1, col2 = st.columns(2)  
 with col1:
     st.write("请选择你要泡的茶叶：")
 with col2:
-    use_custom_time = st.toggle("🎛️ 自定义时间模式", value=False)
+    use_custom_time = st.toggle(
+        "🎛️ 自定义时间模式",
+        value=st.session_state.custom_time_toggle,
+        key="custom_time_toggle",
+        help="开启后，你可以自定义每泡的时间，适合特殊茶叶或个人口味。关闭后将使用默认茶叶时间列表。",
+    )
 
 selected_tea = st.selectbox(
-    label="请选择你要泡的茶叶：", options=list(tea_options.keys()),label_visibility="collapsed"
+    label="请选择你要泡的茶叶：", options=list(tea_options.keys()),label_visibility="collapsed",
+    disabled=st.session_state.is_active,  # ✅ 核心改动：泡茶会话激活时禁用
 )
 
 # 获取原始时间列表
@@ -73,9 +85,10 @@ else:
 if st.session_state.is_running:
     max_step = len(original_time_list) 
     if st.session_state.current_step > max_step:
-        st.session_state.current_step = max_step + 1  # 保持在最后一泡的下一泡，方便用户自定义时间模式继续泡茶
+        pass
+        # st.session_state.current_step = max_step + 1  # 保持在最后一泡的下一泡，方便用户自定义时间模式继续泡茶
     # 防御性检查：防止 step 为负数
-    if st.session_state.current_step < 0:
+    elif st.session_state.current_step < 0:
         st.session_state.current_step = 0
 
 # 将处理后的安全列表存入 session_state
@@ -83,7 +96,7 @@ if st.session_state.is_running:
 st.session_state.active_time_list = active_time_list
 
 # 展示用户的选择
-st.success(f"你选择了：【{selected_tea}】  \n泡茶方式：盖碗 水量：140ml 茶叶：7g")
+st.success(f"你选择了：【{selected_tea}】  \n泡茶方式：盖碗 水量：150ml 茶叶：7g")
 st.caption(f"💡 这种茶建议冲泡 {len(original_time_list)} 次，{original_time_list} 秒")
 
 # region 创建按钮逻辑
@@ -100,7 +113,7 @@ with col1:
             st.session_state.is_active = True
             st.rerun()  # 点击后立刻刷新页面，开始倒计时
         elif st.session_state.current_step > len(original_time_list):
-            st.session_state.warning_msg=f"⚠️ {selected_tea} 建议最多泡 {len(original_time_list)} 次哦。如果想继续泡，请使用自定义时间模式。否则请点击停止/重置。"
+            st.session_state.warning_msg=f"⚠️ {selected_tea} 已经到最大冲泡次数 {len(original_time_list)} 次了。如果想继续泡，请使用自定义时间模式。否则请点击停止/重置。"
         else:
             # 取出当前泡数的时间
             st.session_state.tea_time = st.session_state.active_time_list[st.session_state.current_step - 1]
@@ -118,6 +131,8 @@ with col2:
             st.session_state.is_running = False
             st.session_state.tea_time = 0
             st.session_state.current_step = 1
+            st.session_state.warning_msg=""  # 清空警告消息
+            st.session_state.force_toggle_off = True  # 重置自定义时间模式
             st.rerun()  # 点击后停止倒计时，重置记忆背包
 
 # endregion
@@ -164,7 +179,7 @@ elif st.session_state.tea_time <= 0 and st.session_state.is_running:
     st.session_state.is_running = False  # 重置状态
 
     st.info(
-        f"💡 你已经泡了 {st.session_state.current_step - 1} 次，下一泡建议冲泡 {tea_options[selected_tea][st.session_state.current_step - 1] if st.session_state.current_step <= len(tea_options[selected_tea]) else '[无建议]'} 秒。"
+        f"💡 你已经泡了 {st.session_state.current_step - 1} 次，下一泡 {tea_options[selected_tea][st.session_state.current_step - 1] if st.session_state.current_step <= len(tea_options[selected_tea]) else '[无建议]'} 秒。"
     )
 # endregion
 
